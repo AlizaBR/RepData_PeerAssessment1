@@ -7,8 +7,16 @@ output:
                 keep_md: true
 ---
 ## General setup
-```{r, setup}
+
+```r
 Sys.setlocale("LC_TIME", "C") 
+```
+
+```
+## [1] "C"
+```
+
+```r
 knitr::opts_chunk$set(
 	eval = TRUE,
 	echo = TRUE,
@@ -21,7 +29,8 @@ knitr::opts_chunk$set(
 options(scipen = 1, digits = 6)
 ```
 
-```{r libs, message=FALSE, warning=FALSE}
+
+```r
 if(!require(pander)){
         install.packages("pander")
         library(pander)
@@ -35,18 +44,60 @@ if(!require(viridis)){
 
 
 ## Loading and preprocessing the data
-```{r loading.data}
+
+```r
 if (!file.exists("./activity.csv")) {
         unzip(zipfile = "./activity.zip")        
 }
 activity <- read.csv("./activity.csv")
 ```
 
-```{r preprocessing.NA.remove}
+
+```r
 pander(head(activity))
+```
+
+
+-------------------------------
+ steps      date      interval 
+------- ------------ ----------
+  NA     2012-10-01      0     
+
+  NA     2012-10-01      5     
+
+  NA     2012-10-01      10    
+
+  NA     2012-10-01      15    
+
+  NA     2012-10-01      20    
+
+  NA     2012-10-01      25    
+-------------------------------
+
+```r
 activity$interval <- sprintf("%04d", activity$interval)
 activity$interval <- format(strptime(activity$interval, format="%H%M"), format = "%H:%M")
 pander(head(activity))
+```
+
+
+-------------------------------
+ steps      date      interval 
+------- ------------ ----------
+  NA     2012-10-01    00:00   
+
+  NA     2012-10-01    00:05   
+
+  NA     2012-10-01    00:10   
+
+  NA     2012-10-01    00:15   
+
+  NA     2012-10-01    00:20   
+
+  NA     2012-10-01    00:25   
+-------------------------------
+
+```r
 activity.cc <- activity[complete.cases(activity),]
 activity.cc$date <- droplevels(activity.cc$date)
 ```
@@ -55,12 +106,14 @@ activity.cc$date <- droplevels(activity.cc$date)
 ## What is mean total number of steps taken per day?
 
 ### Histogram of the total number of steps taken each day
-```{r steps.day.cc}
+
+```r
 total.steps.day.cc <- aggregate(activity.cc$steps, list(activity.cc$date), sum)
 names(total.steps.day.cc) <- c("Day", "Steps")
-``` 
+```
 
-```{r  total.steps.hist.cc}
+
+```r
 hist(total.steps.day.cc$Steps,
      breaks = seq(0, 22000, 1000),
      main = "Frequency of the total steps taken each day",
@@ -68,16 +121,19 @@ hist(total.steps.day.cc$Steps,
      ylab = "Number of days (frequency)", ylim = c(0,10),
      cex.axis = 0.8, col = viridis(22))
 abline(h=seq(0,10,2), col="gray", lty="dotted" )
-```  
+```
+
+![](PA1_template_files/figure-html/total.steps.hist.cc-1.png)<!-- -->
 
 ### Mean and median total number of steps taken per day
 
-The **mean** total numbers of steps taken per day is `r round(mean(total.steps.day.cc$Steps), 0)` 
-and the **median** is `r median(total.steps.day.cc$Steps)`.
+The **mean** total numbers of steps taken per day is 10766 
+and the **median** is 10765.
 
 ## What is the average daily activity pattern?
 ### Time series plot of the average number of steps taken
-```{r time.series.cc}
+
+```r
 mean.steps.interval.cc <- aggregate(activity.cc$steps, list(activity.cc$interval), mean)
 names(mean.steps.interval.cc) <- c("Interval", "Steps")
 par(oma = c(.5,1,2,2))
@@ -89,29 +145,34 @@ plot(mean.steps.interval.cc$Steps,
 axis(side = 1, at=seq(0,288,12), labels = mean.steps.interval.cc$Interval[seq(1,289,12)], cex.axis = .8)
 abline(h=seq(0,200,10), col = "gray", lty ="dotted")
 abline(v=seq(0,288,6), col = "lightgray")
-```  
+```
+
+![](PA1_template_files/figure-html/time.series.cc-1.png)<!-- -->
 
 ### The 5-minute interval that, on average, contains the maximum number of steps
-```{r max.interval.cc}
+
+```r
 max.steps <- mean.steps.interval.cc[which.max(mean.steps.interval.cc$Steps),]
-```  
+```
 The interval that on average contains the maximum number of steps is the one that starts at 
-`r max.steps$Interval`.
+08:35.
 
 
 
 ## Imputing missing values
 ### Calculate and report the numver of missing values in the dataset
-```{r na.activity}
+
+```r
 na.activity <- is.na(activity)
 nas <- sum(na.activity == TRUE)
-```  
-There are `r nas` NA's in the dataset
+```
+There are 2304 NA's in the dataset
 
 ### Filling in all of the missing values 
 **Create a new data set with the missing data filled in.**  
 The missing values are replaced with the mean value corresponding to each interval.
-```{r new.df}
+
+```r
 activity.f <- activity
 for (i in 1:nrow(activity.f)){
         if (is.na(activity.f$steps[i]) == TRUE){
@@ -123,12 +184,14 @@ for (i in 1:nrow(activity.f)){
 
 ## Mean total number of steps taken per day
 ### Histogran of the total number of steps taken each day
-```{r steps.day.f}
+
+```r
 total.steps.day.f <- aggregate(activity.f$steps, list(activity.f$date), sum)
 names(total.steps.day.f) <- c("Day", "Steps")
-``` 
+```
 
-```{r  total.steps.hist.f}
+
+```r
 hist(total.steps.day.f$Steps,
      breaks = seq(0, 22000, 1000),
      main = "Frequency of the total steps taken each day",
@@ -138,9 +201,11 @@ hist(total.steps.day.f$Steps,
 abline(h=seq(0,20,2), col="gray", lty="dotted" )
 ```
 
+![](PA1_template_files/figure-html/total.steps.hist.f-1.png)<!-- -->
+
 ### Mean and median total number of steps taken per day
-The **mean** total numbers of steps taken per day is `r round(mean(total.steps.day.f$Steps), 0)` 
-and the **median** is `r round(median(total.steps.day.f$Steps), 0)`.
+The **mean** total numbers of steps taken per day is 10766 
+and the **median** is 10766.
 
 ### Questions
 **Do these values differ from the estimates from the first part of the assignament?**  
@@ -151,7 +216,8 @@ Due to the imputation method, there wasn't a significant impact.
 
 ## Are there differences in activity patterns between weekdays and weekends?
 ### Create new factor variable indicaten weather a given date is a weekday or weekend day
-```{r weekday.var}
+
+```r
 activity.f$date <- as.Date(activity$date)
 for (i in 1:nrow(activity.f)){
         if (weekdays(as.Date(activity.f$date)[i]) %in% c("Saturday","Sunday"))         {
@@ -166,7 +232,8 @@ activity.f$WDay <- as.factor(activity.f$WDay)
 
 ### Panel plot containing a time series plot of the 5-minute interval and the average 
 number of steps taken averaged across all weekday or weekend days.
-```{r wday.plots, fig.height=10}
+
+```r
 splited.activity <- split(activity.f, activity.f$WDay)
 
 par(mfrow = c(2,1))
@@ -183,7 +250,9 @@ for (i in 1:2) {
         abline(h=seq(0,200,10), col = "gray", lty ="dotted")
         abline(v=seq(0,288,6), col = "lightgray")
 }
-```  
+```
+
+![](PA1_template_files/figure-html/wday.plots-1.png)<!-- -->
 
 During the weekdays the activity was more concentrated towards the morning and during the weekend
 it was distributed through all the day. Also, activity starts increasing later on weekends,
